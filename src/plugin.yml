@@ -1,0 +1,15 @@
+name: HalfSlab
+main: halfslab.HalfSlab
+version: 1.0
+authors: [DimoN]
+website: http://playcraft.com.ua/
+
+commands:
+    halfslab:
+        aliases: [hs]
+
+permissions:
+    halfslab.admin.reload:
+        default: op
+    halfslab.player.breake:
+        default: op
