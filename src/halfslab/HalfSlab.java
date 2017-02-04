@@ -9,7 +9,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
@@ -17,6 +16,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import static org.bukkit.event.EventPriority.HIGHEST;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
@@ -48,81 +48,78 @@ public class HalfSlab extends JavaPlugin implements Listener {
     }
     
     
-    @EventHandler
+    @EventHandler(priority=HIGHEST, ignoreCancelled=true)
     public void blockBreakEvent(BlockBreakEvent event){
-        if (!event.isCancelled()){
-            Block block = event.getBlock();
-            Material material = block.getType();
-            if (material.toString().contains("DOUBLE_") && !material.equals(Material.DOUBLE_PLANT)){
-                Player player = event.getPlayer();
-                if (!this.useShift || player.isSneaking()){
-                    if (!this.needPermission || player.hasPermission("halfslab.player.break")){
-                        event.setCancelled(true);
-                        //Координати блока
-                        Point3D blockPoint = new Point3D(block.getX(), block.getY(), block.getZ());
-                        Point3D blockCenterPoint = blockPoint.add(0.5, 0.5, 0.5);
-                        //Інші змінні
-                        BlockFace face = BlockFace.UP;
+        Block block = event.getBlock();
+        Material material = block.getType();
+        if (material.toString().contains("DOUBLE_") && !material.equals(Material.DOUBLE_PLANT)){
+            Player player = event.getPlayer();
+            if (!this.useShift || player.isSneaking()){
+                if (!this.needPermission || player.hasPermission("halfslab.player.break")){
+                    event.setCancelled(true);
+                    //Координати блока
+                    Point3D blockPoint = new Point3D(block.getX(), block.getY(), block.getZ());
+                    Point3D blockCenterPoint = blockPoint.add(0.5, 0.5, 0.5);
+                    //Інші змінні
+                    BlockFace face = BlockFace.UP;
 
-                        Location eye = player.getEyeLocation();
-                        Point3D eyePoint = new Point3D(eye.getX(), eye.getY(), eye.getZ());
+                    Location eye = player.getEyeLocation();
+                    Point3D eyePoint = new Point3D(eye.getX(), eye.getY(), eye.getZ());
 
-                        Vector vector = eye.getDirection();
-                        //Направлення вектора
-                        double vX = vector.getX();
-                        double vY = vector.getY();
-                        double vZ = vector.getZ();
-                        //Дистанція від голови до центра блока
-                        double distance = this.distanceToBlock(blockCenterPoint, eyePoint);
-                        Point3D pos = eyePoint;
-                        if (    (distance - 
-                                    this.distanceToBlock(blockCenterPoint, pos.add(this.step * vX, this.step * vY, this.step * vZ))
-                                ) > 0){
-                            if (distance > 0.7){
-                                double dis = distance - 0.7;
-                                pos.add(dis * vX, dis * vY, dis * vZ);
-                            }
+                    Vector vector = eye.getDirection();
+                    //Направлення вектора
+                    double vX = vector.getX();
+                    double vY = vector.getY();
+                    double vZ = vector.getZ();
+                    //Дистанція від голови до центра блока
+                    double distance = this.distanceToBlock(blockCenterPoint, eyePoint);
+                    Point3D pos = eyePoint;
+                    if (    (distance - 
+                                this.distanceToBlock(blockCenterPoint, pos.add(this.step * vX, this.step * vY, this.step * vZ))
+                            ) > 0){
+                        if (distance > 0.7){
+                            double dis = distance - 0.7;
+                            pos.add(dis * vX, dis * vY, dis * vZ);
+                        }
 
-                            while (!this.inBlock(blockPoint, pos)){
-                                pos = pos.add(this.step * vX, this.step * vY, this.step * vZ);
-                            }
-                            double blockY = block.getY() + 0.5;
-                            if (pos.getY() >= blockY){
-                                face = BlockFace.UP;
-                            }else{
-                                face = BlockFace.DOWN;
-                            }
-                        }else{
+                        while (!this.inBlock(blockPoint, pos)){
+                            pos = pos.add(this.step * vX, this.step * vY, this.step * vZ);
+                        }
+                        double blockY = block.getY() + 0.5;
+                        if (pos.getY() >= blockY){
                             face = BlockFace.UP;
-                        }
-                        byte dataMaterial = block.getData();
-                        String materialName = material.toString().replaceAll("DOUBLE_", "");
-                        Material newMaterial = Material.valueOf(materialName);
-                        if (!player.getGameMode().equals(GameMode.CREATIVE)){
-                            Collection<ItemStack> drops = block.getDrops(player.getInventory().getItemInMainHand());
-                            if (drops != null && drops.size() > 0){
-                                for (ItemStack drop : drops){
-                                    drop.setAmount(1);
-                                    Location blockLocationCenter = block.getLocation().add(0.5, 0.6, 0.5);
-                                    block.getWorld().dropItemNaturally(blockLocationCenter, drop);
-                                    break;
-                                }
-                            }
-                        }
-                        block.setType(newMaterial);
-                        if (face.equals(BlockFace.UP)){
-                            block.setData(dataMaterial);
                         }else{
-                            block.setData( (byte) (dataMaterial + 8));
-                            Location playerLocation = player.getLocation();
-                            Point3D playerPoint = new Point3D(playerLocation.getX(), playerLocation.getY(), playerLocation.getZ());
-                            Point3D blockPointUp = blockPoint.add(0.5, 1, 0.5);
-                            if (this.dontFallPlayer && (blockPoint.getY() + 0.99) < playerPoint.getY() && 
-                                    this.distanceToBlock(blockPointUp, playerPoint) < 1.14){
-                                player.teleport(player.getLocation());
+                            face = BlockFace.DOWN;
+                        }
+                    }else{
+                        face = BlockFace.UP;
+                    }
+                    byte dataMaterial = block.getData();
+                    String materialName = material.toString().replaceAll("DOUBLE_", "");
+                    Material newMaterial = Material.valueOf(materialName);
+                    if (!player.getGameMode().equals(GameMode.CREATIVE)){
+                        Collection<ItemStack> drops = block.getDrops(player.getInventory().getItemInMainHand());
+                        if (drops != null && drops.size() > 0){
+                            for (ItemStack drop : drops){
+                                drop.setAmount(1);
+                                Location blockLocationCenter = block.getLocation().add(0.5, 0.6, 0.5);
+                                block.getWorld().dropItemNaturally(blockLocationCenter, drop);
+                                break;
                             }
                         }
-                        //Bukkit.getWorld(player.getWorld().getUID()).spawnParticle(Particle.CRIT_MAGIC, pos.getX(), pos.getY(), pos.getZ(), 1, 0, 0, 0, 0);
+                    }
+                    block.setType(newMaterial);
+                    if (face.equals(BlockFace.UP)){
+                        block.setData(dataMaterial);
+                    }else{
+                        block.setData( (byte) (dataMaterial + 8));
+                        Location playerLocation = player.getLocation();
+                        Point3D playerPoint = new Point3D(playerLocation.getX(), playerLocation.getY(), playerLocation.getZ());
+                        Point3D blockPointUp = blockPoint.add(0.5, 1, 0.5);
+                        if (this.dontFallPlayer && (blockPoint.getY() + 0.99) < playerPoint.getY() && 
+                                this.distanceToBlock(blockPointUp, playerPoint) < 1.14){
+                            player.teleport(player.getLocation());
+                        }
                     }
                 }
             }
