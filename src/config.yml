@@ -5,11 +5,11 @@ version: 1
 # DON"T CHANGE this value if you do not know how it works. (Max 0.2)
 calculateStep: 0.05
 
-# The player will not fail when breake block down.
+# The player will not fail when break block down.
 dontFallPlayer: true
 
 # You need to sit down to break half block (SHIFT).
 useShift: true
 
-# Only players who have permission can break half block. Permission - halfslab.player.breake
+# Only players who have permission can break half block. Permission - halfslab.player.break
 needPermission: false

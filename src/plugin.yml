@@ -11,5 +11,5 @@ commands:
 permissions:
     halfslab.admin.reload:
         default: op
-    halfslab.player.breake:
+    halfslab.player.break:
         default: op
