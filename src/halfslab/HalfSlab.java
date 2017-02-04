@@ -56,7 +56,7 @@ public class HalfSlab extends JavaPlugin implements Listener {
             if (material.toString().contains("DOUBLE_") && !material.equals(Material.DOUBLE_PLANT)){
                 Player player = event.getPlayer();
                 if (!this.useShift || player.isSneaking()){
-                    if (!this.needPermission || player.hasPermission("mobslimiter.command.reload")){
+                    if (!this.needPermission || player.hasPermission("halfslab.player.break")){
                         event.setCancelled(true);
                         //Координати блока
                         Point3D blockPoint = new Point3D(block.getX(), block.getY(), block.getZ());
