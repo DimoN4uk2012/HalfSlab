@@ -2,8 +2,10 @@ package halfslab;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import javafx.geometry.Point3D;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -19,27 +21,56 @@ import org.bukkit.event.EventHandler;
 import static org.bukkit.event.EventPriority.HIGHEST;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 public class HalfSlab extends JavaPlugin implements Listener {
     
-    int version = 1;
-    
+    int version = 2;
+    int minecraft = 0;
     //Крок перевірки пересічення вектора з заданим блоком
     //Дане значення впливає на продуктивність, чим менше тим точніше, але більше навантаження
     double step = 0.05;
     
     boolean dontFallPlayer = true;
-    boolean useShift = true;
-    boolean needPermission = false;
+    
+    boolean useShiftHalfSlab = true;
+    boolean useShiftSmothSlab = true;
+    boolean useShiftToSlab = true;
+    
+    boolean needPermissionHalfSlab = false;
+    boolean needPermissionSmothSlab = false;
+    boolean needPermissionToSlab = false;
+    
+    boolean enableHalfSlab = true;
+    boolean enableSmothSlab = true;
+    boolean enableRecipe = true;
+    
+    Map<String, Boolean> recipeList = new HashMap<>();
+    
     
     @Override
     public void onEnable(){
         Bukkit.getPluginManager().registerEvents(this, this);
-        Bukkit.getLogger().info("[HalfSlab] Plugin - Enable!");
+        this.minecraft = this.serverVersion();
+        Bukkit.getLogger().info("[HalfSlab] Detect Minecraft VERSION - 1." + this.minecraft);
         this.reloadConfigPlugin();
+        
+        if (this.enableRecipe){
+            Recipe.addRecipeSlab(this.minecraft, this.recipeList);
+        }
+    }
+    
+    private int serverVersion(){
+        String v = Bukkit.getVersion();
+        String[] ve = v.split("MC: ");
+        String ver = ve[1];
+        String vers = ver.replace(")", "");
+        String[] versi = vers.split("\\.");
+        String versio = versi[1];
+        return Integer.parseInt(versio);
     }
     
     @Override
@@ -47,15 +78,38 @@ public class HalfSlab extends JavaPlugin implements Listener {
         Bukkit.getLogger().info("[HalfSlab] Plugin - Disable.");
     }
     
-    
+    @EventHandler(priority=HIGHEST, ignoreCancelled=true)
+    public void blockPlaceEvent(BlockPlaceEvent event){
+        Block block = event.getBlockPlaced();
+        Material material = block.getType();
+        if (this.enableSmothSlab && 
+                material.toString().contains("DOUBLE_") && 
+                !material.toString().equals("DOUBLE_PLANT")){
+            Player player = event.getPlayer();
+            if (!this.useShiftSmothSlab || player.isSneaking()){
+                if (!this.needPermissionSmothSlab || player.hasPermission("halfslab.player.placesmoth")){
+                    byte blockData = block.getData();
+                    if (material.equals(Material.DOUBLE_STEP) && blockData <= 1){
+                        block.setData( (byte) (blockData + 8));
+                    }else
+                    if (this.minecraft >= 8 && material.toString().equals("DOUBLE_STONE_SLAB2") && blockData == 0){
+                        block.setData( (byte) (blockData + 8));
+                    }
+                }
+            } 
+        }
+    }      
+            
     @EventHandler(priority=HIGHEST, ignoreCancelled=true)
     public void blockBreakEvent(BlockBreakEvent event){
         Block block = event.getBlock();
         Material material = block.getType();
-        if (material.toString().contains("DOUBLE_") && !material.equals(Material.DOUBLE_PLANT)){
+        if (this.enableHalfSlab && 
+                material.toString().contains("DOUBLE_") && 
+                !material.toString().equals("DOUBLE_PLANT")){
             Player player = event.getPlayer();
-            if (!this.useShift || player.isSneaking()){
-                if (!this.needPermission || player.hasPermission("halfslab.player.break")){
+            if (!this.useShiftHalfSlab || player.isSneaking()){
+                if (!this.needPermissionHalfSlab || player.hasPermission("halfslab.player.breakhalf")){
                     event.setCancelled(true);
                     //Координати блока
                     Point3D blockPoint = new Point3D(block.getX(), block.getY(), block.getZ());
@@ -81,7 +135,7 @@ public class HalfSlab extends JavaPlugin implements Listener {
                             double dis = distance - 0.7;
                             pos.add(dis * vX, dis * vY, dis * vZ);
                         }
-
+                        
                         while (!this.inBlock(blockPoint, pos)){
                             pos = pos.add(this.step * vX, this.step * vY, this.step * vZ);
                         }
@@ -98,7 +152,13 @@ public class HalfSlab extends JavaPlugin implements Listener {
                     String materialName = material.toString().replaceAll("DOUBLE_", "");
                     Material newMaterial = Material.valueOf(materialName);
                     if (!player.getGameMode().equals(GameMode.CREATIVE)){
-                        Collection<ItemStack> drops = block.getDrops(player.getInventory().getItemInMainHand());
+                        ItemStack hand; 
+                        if (this.minecraft >= 9){
+                            hand = player.getInventory().getItemInMainHand();
+                        }else{
+                            hand = player.getItemInHand();
+                        }
+                        Collection<ItemStack> drops = block.getDrops(hand);
                         if (drops != null && drops.size() > 0){
                             for (ItemStack drop : drops){
                                 drop.setAmount(1);
@@ -110,9 +170,17 @@ public class HalfSlab extends JavaPlugin implements Listener {
                     }
                     block.setType(newMaterial);
                     if (face.equals(BlockFace.UP)){
-                        block.setData(dataMaterial);
+                        if (dataMaterial < 8){
+                            block.setData(dataMaterial);
+                        }else{
+                            block.setData( (byte) (dataMaterial - 8));
+                        }
                     }else{
-                        block.setData( (byte) (dataMaterial + 8));
+                        if (dataMaterial < 8){
+                            block.setData( (byte) (dataMaterial + 8));
+                        }else{
+                            block.setData(dataMaterial);
+                        }
                         Location playerLocation = player.getLocation();
                         Point3D playerPoint = new Point3D(playerLocation.getX(), playerLocation.getY(), playerLocation.getZ());
                         Point3D blockPointUp = blockPoint.add(0.5, 1, 0.5);
@@ -202,9 +270,32 @@ public class HalfSlab extends JavaPlugin implements Listener {
                 this.step = 0.05;
                 Bukkit.getLogger().info("[HalfSlab] ERROR config \"calculateStep:\" > 0.2.");
             }
+            
             this.dontFallPlayer = c.getBoolean("dontFallPlayer");
-            this.useShift = c.getBoolean("useShift");
-            this.needPermission = c.getBoolean("needPermission");
+    
+            this.useShiftHalfSlab = c.getBoolean("breakHalfSlab.useShift");
+            this.useShiftSmothSlab = c.getBoolean("placeSmoothSlab.useShift");
+            this.useShiftToSlab = c.getBoolean("blockToSlab.useShift");
+
+            this.needPermissionHalfSlab = c.getBoolean("breakHalfSlab.needPermission");
+            this.needPermissionSmothSlab = c.getBoolean("placeSmoothSlab.needPermission");
+            this.needPermissionToSlab = c.getBoolean("blockToSlab.needPermission");
+            
+            this.enableRecipe = c.getBoolean("unCraftSlab.enable");
+            this.enableHalfSlab = c.getBoolean("breakHalfSlab.enable");
+            this.enableSmothSlab = c.getBoolean("placeSmoothSlab.enable");
+            
+            this.recipeList.clear();
+            this.recipeList.put("stone", c.getBoolean("unCraftSlab.material.stone"));
+            this.recipeList.put("sandstone", c.getBoolean("unCraftSlab.material.sandstone"));
+            this.recipeList.put("cobblestone", c.getBoolean("unCraftSlab.material.cobblestone"));
+            this.recipeList.put("brick", c.getBoolean("unCraftSlab.material.brick"));
+            this.recipeList.put("smothbrick", c.getBoolean("unCraftSlab.material.smothbrick"));
+            this.recipeList.put("netherbrick", c.getBoolean("unCraftSlab.material.netherbrick"));
+            this.recipeList.put("quartz", c.getBoolean("unCraftSlab.material.quartz"));
+            this.recipeList.put("redsendstone", c.getBoolean("unCraftSlab.material.redsendstone"));
+            this.recipeList.put("purpurblock", c.getBoolean("unCraftSlab.material.purpurblock"));
+            this.recipeList.put("wood", c.getBoolean("unCraftSlab.material.wood"));
             
             Bukkit.getLogger().info("[HalfSlab] Config Reloaded.");
         }

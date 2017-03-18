@@ -1,15 +1,36 @@
-# Version Config File HalfSlab. (DON"T CHANGE)
-version: 1
+# Version Config File HalfSlab. (DON'T CHANGE)
+version: 2
 
 # Step verification directions player. The smaller value the more calculate proces.
-# DON"T CHANGE this value if you do not know how it works. (Max 0.2)
+# DON"T CHANGE this value if you do not know how it works. (Recommended 0.05)(Max 0.2)
 calculateStep: 0.05
 
-# The player will not fail when break block down.
-dontFallPlayer: true
+breakHalfSlab:
+    enable: true
+    # The player will not fail when break block down.
+    dontFallPlayer: true
+    # You need to sit down to break half block (SHIFT).
+    useShift: true
+    # Only players who have permission can break half block. Permission - halfslab.player.breakhalf
+    needPermission: false
 
-# You need to sit down to break half block (SHIFT).
-useShift: true
+placeSmoothSlab:
+    enable: true
+    # You need to sit down to place smooth slab (SHIFT).
+    useShift: true
+    # Only players who have permission can break half block. Permission - halfslab.player.placesmoth
+    needPermission: false
 
-# Only players who have permission can break half block. Permission - halfslab.player.break
-needPermission: false
+unCraftSlab:
+    enable: true
+    material:
+        stone: true
+        sandstone: true
+        cobblestone: true
+        brick: true
+        smothbrick: true
+        netherbrick: true
+        quartz: true
+        redsendstone: true
+        purpurblock: true
+        wood: true

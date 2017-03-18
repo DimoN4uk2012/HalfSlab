@@ -1,6 +1,6 @@
 name: HalfSlab
 main: halfslab.HalfSlab
-version: 1.0.1
+version: 1.1
 description: HalfSlab - You can break half slab
 authors: [DimoN]
 website: http://playcraft.com.ua/
@@ -12,5 +12,8 @@ commands:
 permissions:
     halfslab.admin.reload:
         default: op
-    halfslab.player.break:
+    halfslab.player.breakhalf:
         default: op
+    halfslab.player.placesmoth:
+        default: op
+    
