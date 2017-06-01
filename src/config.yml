@@ -21,6 +21,17 @@ placeSmoothSlab:
     # Only players who have permission can break half block. Permission - halfslab.player.placesmoth
     needPermission: false
 
+blockToSlab:
+    enable: true
+    # You need to sit down to break half block (SHIFT).
+    useShift: true
+    # You need have enchant silk touch to break half block (SHIFT).
+    silkTouch: true
+    # Only players who have permission can break half block. Permission - halfslab.player.toslab
+    needPermission: false
+
+compareToBlock: false
+
 unCraftSlab:
     enable: true
     material:

@@ -1,6 +1,6 @@
 name: HalfSlab
 main: halfslab.HalfSlab
-version: 1.1
+version: 1.1.2
 description: HalfSlab - You can break half slab
 authors: [DimoN]
 website: http://playcraft.com.ua/
@@ -15,5 +15,9 @@ permissions:
     halfslab.player.breakhalf:
         default: op
     halfslab.player.placesmoth:
+        default: op
+    halfslab.player.toslab:
+        default: op
+    halfslab.player.comparetoblock:
         default: op
     

@@ -35,6 +35,7 @@ public class HalfSlab extends JavaPlugin implements Listener {
     double step = 0.05;
     
     boolean dontFallPlayer = true;
+    boolean needSilkTouch = true;
     
     boolean useShiftHalfSlab = true;
     boolean useShiftSmothSlab = true;
@@ -47,6 +48,9 @@ public class HalfSlab extends JavaPlugin implements Listener {
     boolean enableHalfSlab = true;
     boolean enableSmothSlab = true;
     boolean enableRecipe = true;
+    boolean enableToSlab = true;
+    
+    boolean compareToBlock = false;
     
     Map<String, Boolean> recipeList = new HashMap<>();
     
@@ -135,8 +139,9 @@ public class HalfSlab extends JavaPlugin implements Listener {
                             double dis = distance - 0.7;
                             pos.add(dis * vX, dis * vY, dis * vZ);
                         }
-                        
-                        while (!this.inBlock(blockPoint, pos)){
+                        int i = 0;
+                        while (!this.inBlock(blockPoint, pos) && i < 1.5/this.step){
+                            i++;
                             pos = pos.add(this.step * vX, this.step * vY, this.step * vZ);
                         }
                         double blockY = block.getY() + 0.5;
@@ -264,7 +269,7 @@ public class HalfSlab extends JavaPlugin implements Listener {
             FileConfiguration c = this.getConfig();
             
             //Витягує усі параметри з конфігу
-            if (c.getDouble("calculateStep") >= 0.2){
+            if (c.getDouble("calculateStep") <= 0.2){
                 this.step = c.getDouble("calculateStep");
             }else{
                 this.step = 0.05;
@@ -272,6 +277,7 @@ public class HalfSlab extends JavaPlugin implements Listener {
             }
             
             this.dontFallPlayer = c.getBoolean("dontFallPlayer");
+            this.needSilkTouch = c.getBoolean("blockToSlab.silkTouch");
     
             this.useShiftHalfSlab = c.getBoolean("breakHalfSlab.useShift");
             this.useShiftSmothSlab = c.getBoolean("placeSmoothSlab.useShift");
@@ -284,6 +290,8 @@ public class HalfSlab extends JavaPlugin implements Listener {
             this.enableRecipe = c.getBoolean("unCraftSlab.enable");
             this.enableHalfSlab = c.getBoolean("breakHalfSlab.enable");
             this.enableSmothSlab = c.getBoolean("placeSmoothSlab.enable");
+            this.enableToSlab = c.getBoolean("blockToSlab.enable");
+            this.compareToBlock = c.getBoolean("compareToBlock");
             
             this.recipeList.clear();
             this.recipeList.put("stone", c.getBoolean("unCraftSlab.material.stone"));
