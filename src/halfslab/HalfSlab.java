@@ -140,7 +140,8 @@ public class HalfSlab extends JavaPlugin implements Listener {
                             pos.add(dis * vX, dis * vY, dis * vZ);
                         }
                         int i = 0;
-                        while (!this.inBlock(blockPoint, pos) && i < 1.5/this.step){
+                        double max = 4.5/this.step + 2;
+                        while (!this.inBlock(blockPoint, pos) && i < max){
                             i++;
                             pos = pos.add(this.step * vX, this.step * vY, this.step * vZ);
                         }
